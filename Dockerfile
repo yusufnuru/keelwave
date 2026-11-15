@@ -3,7 +3,7 @@
 # Stage 1 — build the React dashboard as a static client-only SPA.
 # `pnpm build` runs vite (SPA mode) + prerenders the shell to index.html and
 # copies dist/client into internal/web/dist so the Go stage can embed it.
-FROM --platform=$BUILDPLATFORM node:22-bookworm-slim AS web
+FROM --platform=$BUILDPLATFORM node:24-bookworm-slim AS web
 WORKDIR /src/web
 RUN corepack enable && corepack prepare pnpm@11.15.1 --activate
 COPY web/package.json web/pnpm-lock.yaml web/pnpm-workspace.yaml ./
@@ -11,7 +11,7 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
 COPY web/ ./
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
-    pnpm build
+    NODE_OPTIONS=--dns-result-order=ipv4first pnpm build
 
 # Stage 2 — build the Go binary with the dashboard embedded.
 FROM --platform=$BUILDPLATFORM golang:1.26-bookworm AS build
